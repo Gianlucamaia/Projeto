@@ -1,0 +1,134 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(TarefaApp());
+}
+
+class TarefaApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Gerenciador de Tarefas',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: TarefaHome(),
+    );
+  }
+}
+
+class TarefaHome extends StatefulWidget {
+  @override
+  _TarefaHomeState createState() => _TarefaHomeState();
+}
+
+class _TarefaHomeState extends State<TarefaHome> {
+  List<Tarefa> _tarefas = []; // 
+  final TextEditingController _tarefaController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Lista de Tarefas'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            _buildInputField(),
+            SizedBox(height: 8),
+            _buildAddButton(),
+            Expanded(child: _buildTaskList()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField() {
+    return TextField(
+      controller: _tarefaController,
+      decoration: InputDecoration(
+        labelText: 'Digite a tarefa',
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return ElevatedButton(
+      onPressed: _adicionarTarefa,
+      child: Text('Cadastrar'),
+    );
+  }
+
+  Widget _buildTaskList() {
+    return ListView.builder(
+      itemCount: _tarefas.length,
+      itemBuilder: (context, index) {
+        return _buildTaskTile(index);
+      },
+    );
+  }
+
+  Widget _buildTaskTile(int index) {
+    return ListTile(
+      title: Text(_tarefas[index].titulo),
+      trailing: IconButton(
+        icon: Icon(Icons.delete),
+        onPressed: () => _excluirTarefa(index),
+        color: Colors.red,
+      ),
+      leading: Checkbox(
+        value: _tarefas[index].concluida,
+        onChanged: (bool? valor) {
+          _moverTarefa(index, valor!);
+        },
+      ),
+    );
+  }
+
+  void _adicionarTarefa() {
+    final tarefaTexto = _tarefaController.text.trim();
+    if (tarefaTexto.isNotEmpty) {
+      setState(() {
+        _tarefas.insert(0, Tarefa(titulo: tarefaTexto));
+        _tarefaController.clear(); 
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tarefa adicionada!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Digite uma tarefa!')),
+      );
+    }
+  }
+
+  void _moverTarefa(int index, bool concluida) {
+    setState(() {
+      var tarefa = _tarefas.removeAt(index);
+      tarefa.concluida = concluida;
+      if (concluida) {
+        _tarefas.add(tarefa); 
+      } else {
+        _tarefas.insert(0, tarefa); 
+      }
+    });
+  }
+
+  void _excluirTarefa(int index) {
+    setState(() {
+      _tarefas.removeAt(index); 
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Tarefa excluída!')),
+    );
+  }
+}
+
+class Tarefa {
+  String titulo;
+  bool concluida;
+
+  Tarefa({required this.titulo, this.concluida = false});
+}
